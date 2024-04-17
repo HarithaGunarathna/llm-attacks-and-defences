@@ -22,15 +22,23 @@ def main(args):
         model_path=config['model_path'],
         tokenizer_path=config['tokenizer_path'],
         conv_template_name=config['conversation_template'],
-        device='cuda:0'
+        device='cuda:1'
+        # device='cpu'
     )
 
     # Create SmoothLLM instance
-    defense = defenses.SmoothLLM(
-        target_model=target_model,
-        pert_type=args.smoothllm_pert_type,
-        pert_pct=args.smoothllm_pert_pct,
-        num_copies=args.smoothllm_num_copies
+    # defense = defenses.SmoothLLM(
+    #     target_model=target_model,
+    #     pert_type=args.smoothllm_pert_type,
+    #     pert_pct=args.smoothllm_pert_pct,
+    #     num_copies=args.smoothllm_num_copies
+    # )
+
+    defense = vars(defenses)[args.defense](
+        target_model=target_model
+        # pert_type=args.smoothllm_pert_type,
+        # pert_pct=args.smoothllm_pert_pct,
+        # num_copies=args.smoothllm_num_copies
     )
 
     # Create attack instance, used to create prompts
@@ -38,23 +46,36 @@ def main(args):
         logfile=args.attack_logfile,
         target_model=target_model
     )
+    if(args.defense=='SmoothLLM'):
 
-    jailbroken_results = []
-    for i, prompt in tqdm(enumerate(attack.prompts)):
-        output = defense(prompt)
-        jb = defense.is_jailbroken(output)
-        jailbroken_results.append(jb)
 
-    print(f'We made {num_errors} errors')
+        jailbroken_results = []
+        for i, prompt in tqdm(enumerate(attack.prompts)):
+            output = defense(prompt)
+            jb = defense.is_jailbroken(output)
+            jailbroken_results.append(jb)
 
-    # Save results to a pandas DataFrame
-    summary_df = pd.DataFrame.from_dict({
-        'Number of smoothing copies': [args.smoothllm_num_copies],
-        'Perturbation type': [args.smoothllm_pert_type],
-        'Perturbation percentage': [args.smoothllm_pert_pct],
-        'JB percentage': [np.mean(jailbroken_results) * 100],
-        'Trial index': [args.trial]
-    })
+        # Save results to a pandas DataFrame
+        summary_df = pd.DataFrame.from_dict({
+            'Number of smoothing copies': [model_configs.DEFENSES['smoothllm']['num_copies']],
+            'Perturbation type': [model_configs.DEFENSES['smoothllm']['pert_type']],
+            'Perturbation percentage': model_configs.DEFENSES['smoothllm']['pert_pct'],
+            'JB percentage': [np.mean(jailbroken_results) * 100],
+            'Trial index': [args.trial]
+        })
+    else:
+        jailbroken_results = []
+        for i, prompt in tqdm(enumerate(attack.prompts)):
+            output = defense(prompt)
+            jailbroken_results.append(output)
+
+        # Save results to a pandas DataFrame
+        summary_df = pd.DataFrame.from_dict({
+            'Number of smoothing copies': [model_configs.DEFENSES['smoothllm']['num_copies']],
+            'JB percentage': [np.mean(jailbroken_results)* 100],
+            'Trial index': [args.trial]
+        })
+
     summary_df.to_pickle(os.path.join(
         args.results_dir, 'summary.pd'
     ))
@@ -89,7 +110,7 @@ if __name__ == '__main__':
         '--attack',
         type=str,
         default='GCG',
-        choices=['GCG', 'PAIR']
+        choices=['GCG', 'PAIR','NoDefensePrompt','SandwitchPrompt']
     )
     parser.add_argument(
         '--attack_logfile',
@@ -97,25 +118,14 @@ if __name__ == '__main__':
         default='data/GCG/vicuna_behaviors.json'
     )
 
-    # SmoothLLM
     parser.add_argument(
-        '--smoothllm_num_copies',
-        type=int,
-        default=10,
-    )
-    parser.add_argument(
-        '--smoothllm_pert_pct',
-        type=int,
-        default=10
-    )
-    parser.add_argument(
-        '--smoothllm_pert_type',
+        '--defense',
         type=str,
-        default='RandomSwapPerturbation',
+        default='SmoothLLM',
         choices=[
-            'RandomSwapPerturbation',
-            'RandomPatchPerturbation',
-            'RandomInsertPerturbation'
+            'SmoothLLM',
+            'NoPertub',
+            'LlmBased'
         ]
     )
 

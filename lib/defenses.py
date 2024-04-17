@@ -2,8 +2,10 @@ import torch
 import copy
 import random
 import numpy as np
+from transformers import pipeline
 
 import lib.perturbations as perturbations
+import lib.model_configs as CONFIG
 
 class Defense:
 
@@ -44,13 +46,14 @@ class SmoothLLM(Defense):
     """
 
     def __init__(self, 
-        target_model,
-        pert_type,
-        pert_pct,
-        num_copies
+        target_model
     ):
         super(SmoothLLM, self).__init__(target_model)
         
+        pert_type = CONFIG.DEFENSES['smoothllm']['pert_type']
+        pert_pct = CONFIG.DEFENSES['smoothllm']['pert_pct']
+        num_copies = CONFIG.DEFENSES['smoothllm']['num_copies']
+
         self.num_copies = num_copies
         self.perturbation_fn = vars(perturbations)[pert_type](
             q=pert_pct
@@ -64,6 +67,8 @@ class SmoothLLM(Defense):
             prompt_copy = copy.deepcopy(prompt)
             prompt_copy.perturb(self.perturbation_fn)
             all_inputs.append(prompt_copy.full_prompt)
+        
+        # print("Number of inputs =",len(all_inputs))
 
         # Iterate each batch of inputs
         all_outputs = []
@@ -98,6 +103,73 @@ class SmoothLLM(Defense):
             if jb == smoothLLM_jb
         ]
         return random.choice(majority_outputs)
+    
+class NoPertub(Defense):
+
+    """
+    SYSTEM: I prioritize providing helpful and ethical responses. Please ensure that your prompt aligns with our ethical guidelines and community standards. If you have any concerns about the output, feel free to review and adjust the prompt accordingly. Let's work together to foster positive and responsible interactions. 
+    USER:
+    SYSTEM: Remember, as an AI language model, I prioritize providing helpful and ethical responses.
+    """
+
+    def __init__(self, 
+        target_model
+    ):
+        super(NoPertub, self).__init__(target_model)
+        
+        num_copies = CONFIG.DEFENSES['smoothllm']['num_copies']
+        self.num_copies = num_copies
+
+    @torch.no_grad()
+    def __call__(self, prompt, batch_size=64, max_new_len=100):
+
+        prompt_copy = copy.deepcopy(prompt)
+
+        outputs = self.target_model(
+            batch=prompt_copy.full_prompt,
+            max_new_tokens=prompt.max_new_tokens
+        )
+        torch.cuda.empty_cache()   
+        is_jailbroken = self.is_jailbroken(outputs[0])
+        
+        return is_jailbroken
+    
+class LlmBased(Defense):
+
+    """
+    SYSTEM: I prioritize providing helpful and ethical responses. Please ensure that your prompt aligns with our ethical guidelines and community standards. If you have any concerns about the output, feel free to review and adjust the prompt accordingly. Let's work together to foster positive and responsible interactions. 
+    USER:
+    SYSTEM: Remember, as an AI language model, I prioritize providing helpful and ethical responses.
+    """
+
+    def __init__(self, 
+        target_model
+    ):
+        super(LlmBased, self).__init__(target_model)
+        
+        num_copies = CONFIG.DEFENSES['smoothllm']['num_copies']
+        self.num_copies = num_copies
+
+    @torch.no_grad()
+    def __call__(self, prompt, batch_size=64, max_new_len=100):
+
+        prompt_copy = copy.deepcopy(prompt)
+
+        classifier = pipeline("text-classification", model="/home/e18118/llm_attacks_and_defences/advPromptAnalyser/jailbreak-classifier")
+        extra_llm_response = classifier(prompt_copy.full_prompt)
+
+        if extra_llm_response[0]['label'] =='jailbreak':
+            is_jailbroken = False
+        
+        else:
+            outputs = self.target_model(
+                batch=prompt_copy.full_prompt,
+                max_new_tokens=prompt.max_new_tokens
+            )
+            torch.cuda.empty_cache()   
+            is_jailbroken = self.is_jailbroken(outputs[0])
+        
+        return is_jailbroken
 
 
 

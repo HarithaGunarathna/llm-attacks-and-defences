@@ -1,6 +1,7 @@
 __pycache__/
 results/
 llm-attacks/
+models/
 
 data/PAIR
 plotting/

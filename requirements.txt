@@ -1,0 +1,7 @@
+accelerate==0.29.2
+fschat==0.2.23
+ml-collections==0.1.1
+pandas==2.2.2
+torch==2.2.2
+tqdm==4.66.2
+transformers==4.39.3

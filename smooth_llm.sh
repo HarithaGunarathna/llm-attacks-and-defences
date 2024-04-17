@@ -9,6 +9,4 @@ python main.py \
     --target_model vicuna \
     --attack GCG \
     --attack_logfile data/GCG/vicuna_behaviors.json \
-    --smoothllm_pert_type $perturbation_type \
-    --smoothllm_pert_pct $perturbation_percentage \
-    --smoothllm_num_copies $num_smoothing_copies
+    --defense NoPertub
