@@ -41,6 +41,9 @@ class LLM:
         )
         if self.conv_template.name == 'llama-2':
             self.conv_template.sep2 = self.conv_template.sep2.strip()
+        elif self.conv_template.name == 'mistral-7b-openorca':
+            self.conv_template.sep = '<|im_end|>'
+
 
     def __call__(self, batch, max_new_tokens=100):
 

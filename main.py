@@ -22,7 +22,7 @@ def main(args):
         model_path=config['model_path'],
         tokenizer_path=config['tokenizer_path'],
         conv_template_name=config['conversation_template'],
-        device='cuda:1'
+        device='cuda:0'
         # device='cpu'
     )
 
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         '--target_model',
         type=str,
         default='vicuna',
-        choices=['vicuna', 'llama2']
+        choices=['vicuna', 'llama2','openOrca']
     )
 
     # Attacking LLM

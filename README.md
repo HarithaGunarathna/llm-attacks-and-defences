@@ -65,7 +65,6 @@ The following codebases have reimplemented our results:
 * https://gist.github.com/deadbits/4ab3f807441d72a2cf3105d0aea9de48
 
 ## Citation
-If you find this codebase useful in your research, please consider citing:
 
 ```bibtex
 @article{robey2023smoothllm,
@@ -75,6 +74,3 @@ If you find this codebase useful in your research, please consider citing:
   year={2023}
 }
 ```
-
-## License
-`smooth-llm` is licensed under the terms of the MIT license. See LICENSE for more details.

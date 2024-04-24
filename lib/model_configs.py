@@ -8,6 +8,11 @@ MODELS = {
         'model_path': '/home/e18118/fyp/smoothllm/smooth-llm/models/vicuna-7b-v1.3',
         'tokenizer_path': '/home/e18118/fyp/smoothllm/smooth-llm/models/vicuna-7b-v1.3',
         'conversation_template': 'vicuna'
+    },
+    'openOrca': {
+        'model_path': '/home/e18118/llm_attacks_and_defences/llm-attacks-and-defences/models/Mistral-7B-OpenOrca',
+        'tokenizer_path': '/home/e18118/llm_attacks_and_defences/llm-attacks-and-defences/models/Mistral-7B-OpenOrca',
+        'conversation_template': 'mistral-7b-openorca'
     }
 }
 
