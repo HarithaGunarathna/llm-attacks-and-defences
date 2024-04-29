@@ -64,12 +64,23 @@ class NoDefensePrompt(Attack):
         conv_template.append_message(conv_template.roles[1], f"")
     
         prompt = conv_template.get_prompt()
-
+        
+        f = open("compareEncodeDecode.txt", "a")
+        f.write("###########################################\n")
+        
+        f.write("".join(["before encording= ",prompt,"\n"]))
+        
         # As per the GCG source code, we encode then decode the full prompt
         encoding = self.target_model.tokenizer(prompt)
         full_prompt = self.target_model.tokenizer.decode(
             encoding.input_ids
         ).replace('<s>','').replace('</s>','')
+        
+        f.write("".join(["after decording= ",full_prompt,"\n"]))
+        
+        f.write("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n")
+        
+        f.close()
 
         # Clear the conv template
         conv_template.messages = []
@@ -79,6 +90,7 @@ class NoDefensePrompt(Attack):
             full_prompt, 
             max_new_tokens
         )
+
 
 class GCG(Attack):
 

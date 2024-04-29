@@ -106,6 +106,7 @@ class SmoothLLM(Defense):
     
 class NoPertub(Defense):
 
+
     """
     SYSTEM: I prioritize providing helpful and ethical responses. Please ensure that your prompt aligns with our ethical guidelines and community standards. If you have any concerns about the output, feel free to review and adjust the prompt accordingly. Let's work together to foster positive and responsible interactions. 
     USER:
@@ -155,7 +156,7 @@ class LlmBased(Defense):
 
         prompt_copy = copy.deepcopy(prompt)
 
-        classifier = pipeline("text-classification", model="/home/e18118/llm_attacks_and_defences/advPromptAnalyser/jailbreak-classifier")
+        classifier = pipeline("text-classification", model=CONFIG.DEFENSES['jailbreakLLM']['model_path'])
         extra_llm_response = classifier(prompt_copy.full_prompt)
 
         if extra_llm_response[0]['label'] =='jailbreak':
